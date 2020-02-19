@@ -4,7 +4,8 @@ import Foundation
 import NIOHTTP1
 
 /// A simplified HTTPRequest type as you'll come across in many web frameworks
-public struct HTTPRequest {
+public struct HTTPRequest
+{
   /// The EventLoop is stored in the HTTP request so that promises can be created
   public let eventLoop: EventLoop
 
@@ -34,7 +35,8 @@ public struct HTTPRequest {
 }
 
 /// An HTTPResponse as you'll commonly see in web frameworks. This response can be a failure or success case depending on the status code in the `head`
-public struct HTTPResponse {
+public struct HTTPResponse
+{
   /// The success or failure status and HTTP headers
   public let head: HTTPResponseHead
 
@@ -57,7 +59,8 @@ public struct HTTPResponse {
 }
 
 /// The contents of the request or response. The type of information can be read from the request/response's HTTP headers
-public struct HTTPBody: ExpressibleByStringLiteral {
+public struct HTTPBody: ExpressibleByStringLiteral
+{
   /// Used to create new ByteBuffers
   private static let allocator = ByteBufferAllocator()
 
