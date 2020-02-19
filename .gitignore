@@ -1,3 +1,5 @@
+#.gitignore for swift package manager based projects
+
 *.resolved
 *.xcodeproj
 .build
