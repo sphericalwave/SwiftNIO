@@ -2,43 +2,20 @@
 import NIO
 import Foundation
 
-/// Entities that can be stored in the mock database provided below
-public protocol DatabaseEntity
+class Database<Entity: DatabaseEntity>
 {
-    associatedtype Identifier: Equatable
-    var id: Identifier { get }   /// Used for `find` and `delete` operations
-}
-
-/// A mock database generic to a single DatabaseEntity type
-///
-/// All results are returned by completing the provided promise
-/// This ensures that the results are passed to the EventLoop the EventLoopPromise originated from
-public final class Database<Entity: DatabaseEntity>
-{
-    
-    /// Creates a new mock database for storing the generic `Entity`
-    public init() {
-        eventLoop = MultiThreadedEventLoopGroup(numberOfThreads: 1).next()
-    }
-    
-    /// The database has it's own eventloop because it's shared between many threads
-    ///
-    /// To ensure all entity access is thread safe, all operations happen on this EventLoop
     private let eventLoop: EventLoop
+    private var entities = [Entity]()
     
-    private var entities = [Entity]()   /// The internal storage of the mock database
-    
-    /// Lists all entities in the database and returns them by completing the promise with this result
-    public func getAllEntities(completing promise: EventLoopPromise<[Entity]>) {
-        eventLoop.execute {
-            promise.succeed(result: self.entities)
-        }
+    init() {
+        self.eventLoop = MultiThreadedEventLoopGroup(numberOfThreads: 1).next() //FIXME: Hidden Dependency
     }
     
-    /// Deletes a single entity
-    ///
-    /// Succeeds when the deletion was successful and fails if no entity was found to remove
-    public func deleteOne(by id: Entity.Identifier, completing promise: EventLoopPromise<Void>) {
+    func allEntities(completing promise: EventLoopPromise<[Entity]>) {
+        eventLoop.execute { promise.succeed(result: self.entities) }
+    }
+    
+    func deleteEntity(id: Entity.Identifier, completing promise: EventLoopPromise<Void>) {
         eventLoop.execute {
             for i in 0..<self.entities.count {
                 if self.entities[i].id == id {
@@ -47,49 +24,30 @@ public final class Database<Entity: DatabaseEntity>
                     return
                 }
             }
-            
             promise.fail(error: DatabaseError.entityNotFound)
         }
     }
     
-    /// Finds a single entity by it's identifier and completed the promise with the result
-    ///
-    /// The promise will be completed with `nil` if the entity was not found
-    public func findOne(by id: Entity.Identifier, completing promise: EventLoopPromise<Entity?>) {
+    func entity(id: Entity.Identifier, completing promise: EventLoopPromise<Entity?>) {
         eventLoop.execute {
             for entity in self.entities where entity.id == id {
                 promise.succeed(result: entity)
                 return
             }
-            
             promise.succeed(result: nil)
         }
     }
     
-    /// Adds an entity to the database
-    ///
-    /// This operation can fail if an entity with this ID already exists
-    public func addEntity(_ newEntity: Entity, completing promise: EventLoopPromise<Void>) {
+    func add(entity: Entity, completing promise: EventLoopPromise<Void>) {
         eventLoop.execute {
-            for entity in self.entities {
-                if entity.id == newEntity.id {
+            for anEntity in self.entities {
+                if anEntity.id == entity.id {
                     promise.fail(error: DatabaseError.entityAlreadyExists)
                     return
                 }
             }
-            
-            self.entities.append(newEntity)
+            self.entities.append(entity)
             promise.succeed(result: ())
         }
     }
-}
-
-/// The databsae can fail with these status codes
-///
-/// Most databases will have too many errors to sum up simply in an enum
-/// and are implemented outside of the application's access
-fileprivate enum DatabaseError: Error
-{
-    case entityAlreadyExists
-    case entityNotFound
 }
