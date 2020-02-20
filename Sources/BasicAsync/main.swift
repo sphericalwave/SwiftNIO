@@ -12,8 +12,8 @@ let bootstrap = ServerBootstrap(group: group)
     
     // Sets up the HTTP parser and handler on the SwiftNIO channel
     .childChannelInitializer { channel in
-        channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).then {
-            channel.pipeline.add(handler: HTTPHandler(responder: QuoteResponder()))
+        channel.pipeline.configureHTTPServerPipeline(withErrorHandling: true).then {_ in
+            channel.pipeline.add(handler: HTTPHandler(responder: QuoteResponder(quoteRepository: ThreadSpecificVariable<QuoteRepository>())))   //FIXME: What is ThreadSpecificaVariable
         }
 }
 
