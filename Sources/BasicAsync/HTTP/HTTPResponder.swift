@@ -9,8 +9,7 @@ import Foundation
 import NIO
 
 //FIXME: Naming
-/// Any type that can respond to HTTP requests
-protocol HTTPResponder
+protocol HTTPResponder  /// Any type that can respond to HTTP requests
 {
     func respond(to request: HTTPRequest) -> EventLoopFuture<HTTPResponse>
 }

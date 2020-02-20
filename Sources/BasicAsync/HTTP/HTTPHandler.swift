@@ -63,13 +63,10 @@ class HTTPHandler<Responder: HTTPResponder>: ChannelInboundHandler
             
             // Responds to the request
             let response = responder.respond(to: request).mapIfError { error in
-                return HTTPResponse(status: .internalServerError,
-                                    body: HTTPBody(text: "Internal server error"))
+                return HTTPResponse(status: .internalServerError, body: HTTPBody(text: "Internal server error", allocator: ByteBufferAllocator()))
             }
             self.request = nil
-            
-            // Writes the response when done
-            self.writeResponse(response, to: ctx)
+            self.writeResponse(response, to: ctx)   // Writes the response when done
         }
     }
     

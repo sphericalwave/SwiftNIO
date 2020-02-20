@@ -18,6 +18,6 @@ struct HTTPRequest
     //FIXME: Convert to method
     var body: HTTPBody? {
         guard let bodyBuffer = bodyBuffer else { return nil }
-        return HTTPBody(buffer: bodyBuffer)
+        return HTTPBody(buffer: bodyBuffer, mimeType: nil, allocator: ByteBufferAllocator()) //FIXME: no nil
     }
 }

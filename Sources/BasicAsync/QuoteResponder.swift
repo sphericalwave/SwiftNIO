@@ -28,7 +28,7 @@ struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponde
             let id = String(component)
             return deleteQuote(by: id, for: request)
         default:
-            let notFound = HTTPResponse(status: .notFound, body: HTTPBody(text: "Not found"))
+            let notFound = HTTPResponse(status: .notFound, body: HTTPBody(text: "Not found", allocator: ByteBufferAllocator()))
             return request.eventLoop.newSucceededFuture(result: notFound)
         }
     }
@@ -43,7 +43,7 @@ struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponde
     func listQuotes(for request: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
         let repository = makeQuoteRepository(for: request)
         return repository.allQuotes().thenThrowing { quotes in
-            let body = try HTTPBody(json: quotes, pretty: true)
+            let body = try HTTPBody(json: quotes, pretty: true, allocator: ByteBufferAllocator())
             return HTTPResponse(status: .ok, body: body)
         }
     }
@@ -57,7 +57,7 @@ struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponde
             let quote = Quote(id: UUID(), text: quoteRequest.text)
             let repository = makeQuoteRepository(for: request)  //FIXME: Imposter Constructor
             return repository.insert(quote: quote).thenThrowing {
-                let body = try HTTPBody(json: quote, pretty: true)
+                let body = try HTTPBody(json: quote, pretty: true, allocator: ByteBufferAllocator())
                 return HTTPResponse(status: .ok, body: body)
             }
         }
@@ -71,7 +71,7 @@ struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponde
             let repository = makeQuoteRepository(for: request) //FIXME: Imposter Constructor
             return repository.quote(id: id).thenThrowing { quote in
                 guard let quote = quote else { throw QuoteAPIError.notFound }
-                let body = try HTTPBody(json: quote, pretty: true)
+                let body = try HTTPBody(json: quote, pretty: true, allocator: ByteBufferAllocator())
                 return HTTPResponse(status: .ok, body: body)
             }
     }
@@ -86,7 +86,7 @@ struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponde
                     return request.eventLoop.newFailedFuture(error: QuoteAPIError.notFound)
                 }
                 return repository.deleteQuote(id: id).thenThrowing {
-                    let body = try HTTPBody(json: quote, pretty: true)
+                    let body = try HTTPBody(json: quote, pretty: true, allocator: ByteBufferAllocator())
                     return HTTPResponse(status: .ok, body: body)
                 }
             }
