@@ -5,6 +5,8 @@ import Foundation
 
 struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponder
 {
+    let quoteRepository = ThreadSpecificVariable<QuoteRepository>()
+    
     func respond(to request: HTTPRequest) -> EventLoopFuture<HTTPResponse> {
         switch request.head.method {
         case .GET:
@@ -39,15 +41,14 @@ struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponde
         }
     }
     
-    let quoteRepository = ThreadSpecificVariable<QuoteRepository>()
     
     func makeQuoteRepository(for request: HTTPRequest) -> QuoteRepository {
         if let existingQuoteRepository = quoteRepository.currentValue {
             return existingQuoteRepository
         }
         
-        let newQuoteRepository = QuoteRepository(for: request.eventLoop)
-        quoteRepository.currentValue = newQuoteRepository
+        let newQuoteRepository = QuoteRepository(eventLoop: request.eventLoop, database: Database<Quote>())
+        quoteRepository.currentValue = newQuoteRepository   //FIXME: Be Immutable
         return newQuoteRepository
     }
     
@@ -117,14 +118,4 @@ struct QuoteResponder: HTTPResponder    //FIXME: Naming, what is a QuoteResponde
                 }
             }
     }
-}
-
-enum QuoteAPIError: Error
-{
-    case notFound, badRequest, invalidIdentifier
-}
-
-struct QuoteRequest: Codable
-{
-    let text: String
 }
